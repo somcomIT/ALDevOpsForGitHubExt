@@ -48,10 +48,10 @@ The following variable structure can be used to configure the different paramete
 
 Name: ALDEVOPS_SETTINGS
 
-```json
+```
 {
     "appname": "TheALAppName",
-    "bcversion": "21",
+    "bcversion": "21",
     "environments": {
         "PROD": {
             "bcinstance" : "BC21",
