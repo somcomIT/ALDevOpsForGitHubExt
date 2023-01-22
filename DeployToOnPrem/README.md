@@ -42,9 +42,95 @@ Specifies how the database schema for the tenant database is synchronized with t
 
 Specifies the usage of some optional parameters for the Uninstall-NAVApp cmdlet, not required, Options = "SaveData, DoNotSaveData, ClearSchema", default = SaveData
 
-## Configuration with Action Variable
+## Sample yaml for AL Project
 
-The following variable structure can be used to configure the different parameters of this action.
+### PublishToOnPremEnvironment.yaml
+
+```yaml
+name: 'Publish To On-Prem Environment'
+
+on:
+  workflow_dispatch:
+    inputs:
+      useBranch:
+        description: Artifacts of branch to deploy (main)
+        required: true
+        default: 'main'
+      environment:
+        type: choice
+        description: On-Prem Environment
+        required: true
+        options:
+        - PROD
+        - TEST
+        - DEV
+        default: 'TEST'
+      onPremInstanceName:
+        description: BC Instance (current defined in variables ALDEVOPS_SETTINGS environments[On-Prem Environment]), may be overruled here
+        type: string
+        required: false
+      syncMode:
+        type: choice
+        description: Mode for schema synchronisation
+        options:
+        - Add
+        - ForceSync
+        default: 'Add'
+        required: false
+      uninstallMode:
+        type: choice
+        description: Data handling owned by the app on reinstall 
+        required: false
+        options:
+        - SaveData
+        - DoNotSaveData
+        - ClearSchema
+        default: 'SaveData'
+
+permissions:
+  contents: read
+  actions: read
+
+defaults:
+  run:
+    shell: PowerShell
+
+env:
+  _bcversion: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).bcversion }}
+  _bcinstance: ${{ github.event.inputs.onPremInstanceName || fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].bcinstance }}
+  _enabledataloss: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].enabledatalossoptions }}
+  _appname: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).appname || github.repository }}
+
+jobs:
+  Publish:
+    if: ${{ vars.ALDEVOPS_SETTINGS && fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
+    runs-on: 
+      labels: [ self-hosted ]
+      group: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
+    name: Publish to BCInstance
+    steps:
+      - name: Deploy keep data
+        if: ${{ env._enabledataloss == 'false' || github.event.inputs.uninstallMode == 'SaveData'}}
+        uses: somcomIT/ALDevOpsForGithubExt/DeployToOnPrem@v1.0
+        with:
+          bcVersion: ${{ env._bcVersion }}
+          onPremInstanceName: ${{ env._bcinstance }}
+          appName: ${{ env._appname }}
+          useBranch: ${{ github.event.inputs.useBranch }}
+          syncMode: ${{ github.event.inputs.syncMode }}
+      - name: Deploy delete data
+        if: ${{ env._enabledataloss == 'true' && github.event.inputs.uninstallMode != 'SaveData'}}
+        uses: somcomIT/ALDevOpsForGithubExt/DeployToOnPrem@v1.0
+        with:
+          bcVersion: ${{ env._bcVersion }}
+          onPremInstanceName: ${{ env._bcinstance }}
+          appName: ${{ env._appname }}
+          useBranch: ${{ github.event.inputs.useBranch }}
+          syncMode: ${{ github.event.inputs.syncMode }}
+          uninstallMode: ${{ github.event.inputs.uninstallMode }}
+```
+
+### Configuration Action Variable
 
 Name: ALDEVOPS_SETTINGS
 
@@ -55,11 +141,11 @@ Name: ALDEVOPS_SETTINGS
     "environments": {
         "PROD": {
             "bcinstance" : "BC21",
-            "runnergroup": "prod_client",
+            "runnergroup": "prod_customer",
         },
         "TEST": {
             "bcinstance" : "BC21TEST",
-            "runnergroup": "dev",
+            "runnergroup": "test_customer",
         },
         "DEV": {
             "bcinstance" : "BC21DEV",
