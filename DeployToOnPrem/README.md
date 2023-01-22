@@ -27,8 +27,7 @@ Specifies the name of a Business Central Server instance, required
 
 ### appName
 
-The name of the app to be deployed, extracts the name of the repository as app name if github.repository is provided (userororg/repo), 
-required
+The name of the app to be deployed, extracts the name of the repository as app name if github.repository is provided (userororg/repo), required
 
 ### useBranch
 
