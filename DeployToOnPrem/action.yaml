@@ -1,0 +1,42 @@
+name: PowerShell script
+author: Martin Sompek
+inputs:
+  token:
+    description: The GitHub token running the action
+    required: false
+    default: ${{ github.token }}
+  bcVersion:
+    description: BC version no. of running instance
+    required: true
+  onPremInstanceName:
+    description: BC Instance to deploy to
+    required: true
+  appName:
+    description: App Name
+    required: true
+  useBranch:
+    description: Branch of artifacts to use for deployment
+    required: true
+  syncMode:
+    description: Branch of artifacts to use for deployment
+    required: false
+    default: 'Add'
+  uninstallMode:
+    description: handling of data and schema at uninstall 
+    required: false
+    default: 'SaveData'
+
+runs:
+  using: composite
+  steps:
+    - name: run
+      shell: powershell
+      env:
+        _token: ${{ inputs.token }}
+        _bcVersion: ${{ inputs.bcVersion }}
+        _bcInstance: ${{ inputs.onPremInstanceName }}
+        _appName:  ${{ inputs.appName }}
+        _branch: ${{ inputs.useBranch }}
+        _syncMode: ${{ inputs.syncMode }}
+        _uninstallMode: ${{ inputs.uninstallMode }}
+      run: try { ${{ github.action_path }}/DeployToOnPrem.ps1 -BCVersion "$ENV:_bcVersion" -BCInstance "$ENV:_bcInstance" -appName "$ENV:_appName" -token "$ENV:_token" -branch "$ENV:_branch" -syncMode "$ENV:_syncMode" -uninstallMode "$ENV:_uninstallMode"} catch { Write-Host "::Error::Unexpected error when running action ($($_.Exception.Message.Replace("`r",'').Replace("`n",' ')))"; exit 1 }
