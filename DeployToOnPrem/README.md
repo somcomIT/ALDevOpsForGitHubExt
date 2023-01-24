@@ -166,3 +166,5 @@ For Runners, which are set up and installed on productive systems, the following
 3. In addition, access should be restricted to one workflow (for example: *orgname/reponame/.github/workflows/PublishToOnPremEnvironment.yaml@refs/heads/main*)
 
 The repo that has access to the workflow should have an action variable with the name ALDEVOPS_SETTINGS with a definition for the element "runnergroup" for a defined environment. So it is possible to run the publishing workflow job only if the variable is defined.
+
+<ins>Note:</ins> To create and configure runner groups, upgrading to an Enterprise plan is required.
