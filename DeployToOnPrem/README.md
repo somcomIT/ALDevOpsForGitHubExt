@@ -86,6 +86,8 @@ on:
         - ClearSchema
         default: 'SaveData'
 
+run-name: Publish to ${{ inputs.environment }} by @${{ github.actor }}
+
 permissions:
   contents: read
   actions: read
