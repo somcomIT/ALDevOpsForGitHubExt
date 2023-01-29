@@ -5,7 +5,8 @@ param(
     $token,
     $branch,
     $syncMode,
-    $uninstallMode
+    $uninstallMode,
+    $aadTenantId
 )
 
 function importModuleWithTestPath
@@ -129,7 +130,11 @@ if ($allArtifacts) {
             $UnpublishedVersion = $App.Version
             $runner += 1
         }
-        Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant
+        if ($aadTenantId) {
+            Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant -PublisherAzureActiveDirectoryTenantId $aadTenantId
+        } else {
+            Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant
+        }
         $App = Get-NAVAppInfo -ServerInstance $BCInstance -TenantSpecificProperties -name $appName -Tenant 'default' | Where-Object { $_.IsPublished }
         Write-Host "$("{0:d2}" -f $runner): publishing $($App.Name), $($App.Version) to $BCInstance"
         Write-Host '... publish'
