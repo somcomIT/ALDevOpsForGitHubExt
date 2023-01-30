@@ -131,22 +131,15 @@ if ($allArtifacts) {
             $runner += 1
         }
 
-        #$value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($aadTenantId))
-        $value = $aadTenantId
-    
-        if ($value) {
-            Write-Host "Tenant=$($value)"
+        $pubwithoption = ''
+        if ($aadTenantId) {
+            Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant -PublisherAzureActiveDirectoryTenantId $aadTenantId
+            $pubwithoption = 'with PublisherAzureActiveDirectoryTenantId'
         } else {
-            Write-Host "no Tenant spec"
-        }
-
-        #if ($aadTenantId) {
-        #    Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant -PublisherAzureActiveDirectoryTenantId $aadTenantId
-        #} else {
             Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant
-        #}
+        }
         $App = Get-NAVAppInfo -ServerInstance $BCInstance -TenantSpecificProperties -name $appName -Tenant 'default' | Where-Object { $_.IsPublished }
-        Write-Host "$("{0:d2}" -f $runner): publishing $($App.Name), $($App.Version) to $BCInstance"
+        Write-Host "$("{0:d2}" -f $runner): publishing $($App.Name), $($App.Version) to $BCInstance $pubwithoption"
         Write-Host '... publish'
         if ($App.SyncState -ne 'Synced') {
             Write-Host "... sync $syncMode"
