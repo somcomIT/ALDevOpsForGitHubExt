@@ -133,8 +133,8 @@ if ($allArtifacts) {
 
         $pubwithoption = ''
         if ($aadTenantId) {
-            $aadstring = ConvertFrom-SecureString -SecureString $aadTenantId -AsPlainText
-            $aad = [System.guid]::New($aadstring)
+            #$aadstring = ConvertFrom-SecureString -SecureString $aadTenantId -AsPlainText
+            $aad = [System.guid]::New($aadTenantId)
             Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant -PublisherAzureActiveDirectoryTenantId $aad
             $pubwithoption = 'with PublisherAzureActiveDirectoryTenantId'
         } else {
