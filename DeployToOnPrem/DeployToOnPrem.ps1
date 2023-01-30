@@ -5,7 +5,8 @@ param(
     $token,
     $branch,
     $syncMode,
-    $uninstallMode
+    $uninstallMode,
+    $aadTenantId
 )
 
 function importModuleWithTestPath
@@ -33,6 +34,19 @@ function testOption
     }
 }
 
+function testIsGuid
+{
+    [OutputType([bool])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [string]$StringGuid
+    )
+ 
+   $ObjectGuid = [System.Guid]::empty
+   return [System.Guid]::TryParse($StringGuid,[System.Management.Automation.PSReference]$ObjectGuid) # Returns True if successfully parsed
+}
+
 # test syncMode, uninstallMode Parameter
 testOption "Add","ForceSync" $syncMode
 testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
@@ -41,6 +55,13 @@ testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
 $AppName = $AppName.Substring($AppName.IndexOf('/')+1)
 $appPublisher = '*'
  
+# test aadTenantId
+if ($aadTenantId) {
+    if (!(testIsGuid($aadTenantId))) {
+        throw "parameter aadTenantId is not a valid GUID"
+    }
+}
+
 # import NavAdmin module
 $navAdminToolPath = $ENV:ProgramFiles + '\Microsoft Dynamics 365 Business Central\' + $BCVersion + '0\Service\NavAdminTool.ps1'
 importModuleWithTestPath $navAdminToolPath
@@ -129,9 +150,17 @@ if ($allArtifacts) {
             $UnpublishedVersion = $App.Version
             $runner += 1
         }
-        Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant
+
+        $pubwithoption = ''
+        if ($aadTenantId) {
+            $aad = [System.guid]::New($aadTenantId)
+            Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant -PublisherAzureActiveDirectoryTenantId $aad
+            $pubwithoption = 'with PublisherAzureActiveDirectoryTenantId'
+        } else {
+            Publish-NAVApp -ServerInstance $BCInstance -Path $appFile -SkipVerification -scope Tenant
+        }
         $App = Get-NAVAppInfo -ServerInstance $BCInstance -TenantSpecificProperties -name $appName -Tenant 'default' | Where-Object { $_.IsPublished }
-        Write-Host "$("{0:d2}" -f $runner): publishing $($App.Name), $($App.Version) to $BCInstance"
+        Write-Host "$("{0:d2}" -f $runner): publishing $($App.Name), $($App.Version) to $BCInstance $pubwithoption"
         Write-Host '... publish'
         if ($App.SyncState -ne 'Synced') {
             Write-Host "... sync $syncMode"
