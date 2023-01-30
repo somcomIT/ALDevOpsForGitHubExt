@@ -34,6 +34,19 @@ function testOption
     }
 }
 
+function testIsGuid
+{
+    [OutputType([bool])]
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [string]$StringGuid
+    )
+ 
+   $ObjectGuid = [System.Guid]::empty
+   return [System.Guid]::TryParse($StringGuid,[System.Management.Automation.PSReference]$ObjectGuid) # Returns True if successfully parsed
+}
+
 # test syncMode, uninstallMode Parameter
 testOption "Add","ForceSync" $syncMode
 testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
@@ -42,6 +55,13 @@ testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
 $AppName = $AppName.Substring($AppName.IndexOf('/')+1)
 $appPublisher = '*'
  
+# test aadTenantId
+if ($aadTenantId) {
+    if (not (testIsGuid($aadTenantId))) {
+        throw "parameter aadTenantId is not a valid GUID"
+    }
+}
+
 # import NavAdmin module
 $navAdminToolPath = $ENV:ProgramFiles + '\Microsoft Dynamics 365 Business Central\' + $BCVersion + '0\Service\NavAdminTool.ps1'
 importModuleWithTestPath $navAdminToolPath
