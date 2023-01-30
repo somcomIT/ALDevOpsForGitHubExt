@@ -26,7 +26,7 @@ inputs:
     required: false
     default: 'SaveData'
   aadTenantId:
-    description: AAD tenant id 
+    description: AAD tenant for PublisherAzureActiveDirectoryTenantId publishing option
     required: false
 
 runs:
