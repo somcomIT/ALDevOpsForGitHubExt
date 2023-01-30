@@ -130,8 +130,11 @@ if ($allArtifacts) {
             $UnpublishedVersion = $App.Version
             $runner += 1
         }
-        if ($aadTenantId) {
-            Write-Host "Tenant=$($aadTenantId)"
+
+        $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($aadTenantId))
+    
+        if ($value) {
+            Write-Host "Tenant=$($value)"
         } else {
             Write-Host "no Tenant spec"
         }
