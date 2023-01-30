@@ -131,7 +131,7 @@ if ($allArtifacts) {
             $runner += 1
         }
 
-        $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($aadTenantId))
+        #$value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($aadTenantId))
         $value = $aadTenantId
     
         if ($value) {
