@@ -132,6 +132,7 @@ if ($allArtifacts) {
         }
 
         $value = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($aadTenantId))
+        $value = $aadTenantId
     
         if ($value) {
             Write-Host "Tenant=$($value)"
