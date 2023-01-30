@@ -57,7 +57,7 @@ $appPublisher = '*'
  
 # test aadTenantId
 if ($aadTenantId) {
-    if (not (testIsGuid($aadTenantId))) {
+    if (!(testIsGuid($aadTenantId))) {
         throw "parameter aadTenantId is not a valid GUID"
     }
 }
