@@ -5,6 +5,7 @@ param(
     $token,
     $branch,
     $syncMode,
+    $enableDataLoss,
     $uninstallMode,
     $aadTenantId
 )
@@ -49,12 +50,25 @@ function testIsGuid
 
 # test syncMode, uninstallMode Parameter
 testOption "Add","ForceSync" $syncMode
-testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
+testOption "DoNotSaveData","ClearSchema","SaveData","" $uninstallMode
 
 # extract appname from GITHUB_REPOSITORY if not specified in ALDEVOPS_SETTINGS
 $AppName = $AppName.Substring($AppName.IndexOf('/')+1)
 $appPublisher = '*'
  
+if (!($enableDataLoss)) {
+    throw "fehlendes enableDataLoss"
+}
+
+if ($enableDataLoss -eq $false) {
+   throw "enableDataLoss = false"
+} else {
+    throw "enableDataLoss = true"
+}
+if ($enableDataLoss -eq $false) {
+    $uninstallMode = ''
+}
+
 # test aadTenantId
 if ($aadTenantId) {
     if (!(testIsGuid($aadTenantId))) {
