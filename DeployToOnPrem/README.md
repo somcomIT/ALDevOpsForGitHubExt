@@ -27,19 +27,27 @@ Specifies the name of a Business Central Server instance, required
 
 ### appName
 
-The name of the app to be deployed, extracts the name of the repository as app name if github.repository is provided (userororg/repo), required
+The name of the app to be deployed, uses the name of the repository as app name if github.repository is provided (userororg/repo), required
 
 ### useBranch
 
-The branch to get the desired artifacts (.app files) to deploy, required
+The branch from which the artifacts (.app files) should be taken for deployment, required
 
 ### syncMode
 
-Specifies how the database schema for the tenant database is synchronized with the database schema that the target Business Central app's objects define, not required, Options = "Add, ForceSync", default = Add
+Specifies how the database schema for the tenant database is synchronized with the database schema, not required, Options = "Add, ForceSync", default = Add
+
+### enableDataLoss
+
+Specifies if dataloss should be possible when uninstalling the app (see uninstallMode), required, default = false (v1.1)
 
 ### uninstallMode
 
 Specifies the usage of some optional parameters for the Uninstall-NAVApp cmdlet, not required, Options = "SaveData, DoNotSaveData, ClearSchema", default = SaveData
+
+### aadTenantId
+
+AAD tenant for PublisherAzureActiveDirectoryTenantId publishing option, not required (v1.1)
 
 ## Sample yaml for AL Project
 
@@ -49,91 +57,83 @@ Specifies the usage of some optional parameters for the Uninstall-NAVApp cmdlet,
 name: 'Publish To On-Prem Environment'
 
 on:
-  workflow_dispatch:
-    inputs:
-      useBranch:
-        description: Artifacts of branch to deploy (main)
-        required: true
-        default: 'main'
-      environment:
-        type: choice
-        description: On-Prem Environment
-        required: true
-        options:
-        - PROD
-        - TEST
-        - DEV
-        default: 'TEST'
-      onPremInstanceName:
-        description: BC Instance (current defined in variables ALDEVOPS_SETTINGS environments[On-Prem Environment]), may be overruled here
-        type: string
-        required: false
-      syncMode:
-        type: choice
-        description: Mode for schema synchronisation
-        options:
-        - Add
-        - ForceSync
-        default: 'Add'
-        required: false
-      uninstallMode:
-        type: choice
-        description: Data handling owned by the app on reinstall 
-        required: false
-        options:
-        - SaveData
-        - DoNotSaveData
-        - ClearSchema
-        default: 'SaveData'
+  workflow_dispatch:
+    inputs:
+      useBranch:
+        description: Artifacts of branch to deploy (main)
+        required: true
+        default: 'main'
+      environment:
+        type: choice
+        description: On-Prem Environment
+        required: true
+        options:
+        - PROD
+        - TEST
+        - DEV
+        default: 'TEST'
+      onPremInstanceName:
+        description: BC Instance (current defined in variables ALDEVOPS_SETTINGS environments[On-Prem Environment]), may be overruled here
+        type: string
+        required: false
+      syncMode:
+        type: choice
+        description: Mode for schema synchronisation
+        options:
+        - Add
+        - ForceSync
+        default: 'Add'
+        required: false
+      uninstallMode:
+        type: choice
+        description: Data handling owned by the app on reinstall 
+        required: false
+        options:
+        - SaveData
+        - DoNotSaveData
+        - ClearSchema
+        default: 'SaveData'
 
 run-name: Publish to ${{ inputs.environment }} by @${{ github.actor }}
 
 permissions:
-  contents: read
-  actions: read
+  contents: read
+  actions: read
 
 defaults:
-  run:
-    shell: PowerShell
+  run:
+    shell: PowerShell
 
 env:
-  _bcversion: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).bcversion }}
-  _bcinstance: ${{ github.event.inputs.onPremInstanceName || fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].bcinstance }}
-  _enabledataloss: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].enabledatalossoptions }}
-  _appname: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).appname || github.repository }}
+  _bcversion: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).bcversion }}
+  _bcinstance: ${{ github.event.inputs.onPremInstanceName || fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].bcinstance }}
+  _appname: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).appname || github.repository }}
+  _aadtenantid: ${{ secrets.ALDEVOPS_AADTENANTID }}
+  _enabledataloss: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].enabledatalossoptions == 'true' && github.event.inputs.uninstallMode != 'SaveData'}}
 
 jobs:
-  Publish:
-    if: ${{ vars.ALDEVOPS_SETTINGS && fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
-    runs-on: 
-      labels: [ self-hosted ]
-      group: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
-    name: Publish to BCInstance
-    steps:
-      - name: Deploy keep data
-        if: ${{ env._enabledataloss == 'false' || github.event.inputs.uninstallMode == 'SaveData'}}
-        uses: somcomIT/ALDevOpsForGithubExt/DeployToOnPrem@v1.0
-        with:
-          bcVersion: ${{ env._bcVersion }}
-          onPremInstanceName: ${{ env._bcinstance }}
-          appName: ${{ env._appname }}
-          useBranch: ${{ github.event.inputs.useBranch }}
-          syncMode: ${{ github.event.inputs.syncMode }}
-      - name: Deploy delete data
-        if: ${{ env._enabledataloss == 'true' && github.event.inputs.uninstallMode != 'SaveData'}}
-        uses: somcomIT/ALDevOpsForGithubExt/DeployToOnPrem@v1.0
-        with:
-          bcVersion: ${{ env._bcVersion }}
-          onPremInstanceName: ${{ env._bcinstance }}
-          appName: ${{ env._appname }}
-          useBranch: ${{ github.event.inputs.useBranch }}
-          syncMode: ${{ github.event.inputs.syncMode }}
-          uninstallMode: ${{ github.event.inputs.uninstallMode }}
+  Publish:
+    if: ${{ vars.ALDEVOPS_SETTINGS && fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
+    runs-on: 
+      labels: [ self-hosted ]
+      group: ${{ fromJSON(vars.ALDEVOPS_SETTINGS).environments[github.event.inputs.environment].runnergroup }}
+    name: Publish to BCInstance
+    steps:
+      - name: Deploy keep data
+        uses: somcomIT/ALDevOpsForGithubExt/DeployToOnPrem@v1.1
+        with:
+          bcVersion: ${{ env._bcVersion }}
+          onPremInstanceName: ${{ env._bcinstance }}
+          appName: ${{ env._appname }}
+          useBranch: ${{ github.event.inputs.useBranch }}
+          syncMode: ${{ github.event.inputs.syncMode }}
+          uninstallMode: ${{ github.event.inputs.uninstallMode }}
+          aadTenantId: ${{ env._aadtenantid }}
 ```
 
-### Configuration Action Variable
+### Configuration Action Variables
 
-Name: ALDEVOPS_SETTINGS
+Name: **ALDEVOPS_SETTINGS**
 
 ```
 {
@@ -156,6 +156,11 @@ Name: ALDEVOPS_SETTINGS
     }
 }
 ```
+
+### Configuration Secrets
+
+Name: **ALDEVOPS_AADTENANTID**  
+Guid, the Azure Active Directory Tenant ID of the App Publisher 
 
 ## Runners configuration and security
 

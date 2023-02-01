@@ -5,6 +5,7 @@ param(
     $token,
     $branch,
     $syncMode,
+    $enableDataLoss,
     $uninstallMode,
     $aadTenantId
 )
@@ -47,14 +48,19 @@ function testIsGuid
    return [System.Guid]::TryParse($StringGuid,[System.Management.Automation.PSReference]$ObjectGuid) # Returns True if successfully parsed
 }
 
-# test syncMode, uninstallMode Parameter
-testOption "Add","ForceSync" $syncMode
-testOption "DoNotSaveData","ClearSchema","SaveData","" $modeArray
-
 # extract appname from GITHUB_REPOSITORY if not specified in ALDEVOPS_SETTINGS
 $AppName = $AppName.Substring($AppName.IndexOf('/')+1)
 $appPublisher = '*'
- 
+
+# test syncMode, uninstallMode Parameter
+testOption "Add","ForceSync" $syncMode
+testOption "DoNotSaveData","ClearSchema","SaveData","" $uninstallMode
+
+# disable any datadeletion if enableDataLoss is false 
+if ($enableDataLoss -eq $false) {
+    $uninstallMode = ''
+}
+
 # test aadTenantId
 if ($aadTenantId) {
     if (!(testIsGuid($aadTenantId))) {
