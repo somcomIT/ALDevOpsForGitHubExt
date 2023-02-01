@@ -6,27 +6,28 @@ inputs:
     required: false
     default: ${{ github.token }}
   bcVersion:
-    description: BC version no. of running instance
+    description: Specifies the version of the BC System running i.e. 20, 21, 22
     required: true
   onPremInstanceName:
     description: BC Instance to deploy to
     required: true
   appName:
-    description: App Name
+    description: The name of the app to be deployed, uses the name of the repository as app name if github.repository is provided
     required: true
   useBranch:
-    description: Branch of artifacts to use for deployment
+    description: The branch from which the artifacts should be taken for deployment
     required: true
   syncMode:
-    description: Branch of artifacts to use for deployment
+    description: Specifies how the database schema for the tenant database is synchronized with the database schema
     required: false
     default: 'Add'
   enableDataLoss: 
+    description: Specifies if dataloss should be possible when uninstalling the app
     type: boolean
     required: true
     default: 'false'
   uninstallMode:
-    description: handling of data and schema at uninstall 
+    description: Specifies the usage of some optional parameters for the Uninstall-NAVApp cmdlet
     required: false
     default: 'SaveData'
   aadTenantId:

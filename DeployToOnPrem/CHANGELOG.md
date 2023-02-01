@@ -2,8 +2,8 @@
 
 ## [v1.1]
 
-* neuer Parameter enableDataloss
-* aadtenantid
+* added parameter enableDataloss to simplify the calling yaml from the AL project
+* added aadtenantid parameter to support key vault secrets
 
 ## [v1.0]
 

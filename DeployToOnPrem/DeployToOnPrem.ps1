@@ -48,23 +48,15 @@ function testIsGuid
    return [System.Guid]::TryParse($StringGuid,[System.Management.Automation.PSReference]$ObjectGuid) # Returns True if successfully parsed
 }
 
+# extract appname from GITHUB_REPOSITORY if not specified in ALDEVOPS_SETTINGS
+$AppName = $AppName.Substring($AppName.IndexOf('/')+1)
+$appPublisher = '*'
+
 # test syncMode, uninstallMode Parameter
 testOption "Add","ForceSync" $syncMode
 testOption "DoNotSaveData","ClearSchema","SaveData","" $uninstallMode
 
-# extract appname from GITHUB_REPOSITORY if not specified in ALDEVOPS_SETTINGS
-$AppName = $AppName.Substring($AppName.IndexOf('/')+1)
-$appPublisher = '*'
- 
-if (!($enableDataLoss)) {
-    throw "fehlendes enableDataLoss"
-}
-
-if ($enableDataLoss -eq $false) {
-   throw "enableDataLoss = false"
-} else {
-    throw "enableDataLoss = true"
-}
+# disable any datadeletion if enableDataLoss is false 
 if ($enableDataLoss -eq $false) {
     $uninstallMode = ''
 }
