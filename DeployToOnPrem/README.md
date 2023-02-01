@@ -160,7 +160,7 @@ Name: **ALDEVOPS_SETTINGS**
 ### Configuration Secrets
 
 Name: **ALDEVOPS_AADTENANTID**  
-Guid, the Azure Active Directory Tenant ID of the App Publisher 
+Guid, the Azure Active Directory Tenant ID of the App Publisher, not required. Only needed when the app supports azure key vault usage. 
 
 ## Runners configuration and security
 
